@@ -203,11 +203,10 @@ class MoveGroupPythonInterfaceSimple(object):
         self.set_gripper_width(0.012)
         time.sleep(1)
 
-        ## TODO: fill up the trajectory list below with your own recorded joint states
-        ## Angles are in Degree
-        ## Example Joint Config: [[0, 0, 20, 20]]
-        ## Below are example values, change them as needed.
-        trajectory_list = [[0, 0, 20, 20]] 
+        ## Look at the Angles below, this is where the robot arm will move to.
+        ## These angles are in degrees.
+        ## Move your robot to these arm angles using the rviz interface to see how will this look.
+        trajectory_list = [[0, 45, -20, 40]] 
 
         ## Convert angel to radian
         trajectory_list = [[x * pi / 180 for x in wp] for wp in trajectory_list]
