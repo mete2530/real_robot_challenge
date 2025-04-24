@@ -37,12 +37,21 @@ class KalmanFilter:
         ## NOTE: Don't forget to normalize the angle after each modification to state.
 
         ## Implement the control model.
+        theta = self.x[2, 0]
+        dx = v * np.cos(theta) * dt
+        dy = v * np.sin(theta) * dt
+        dtheta = w * dt
 
         ## Predict the state.
+        self.x[0, 0] += dx
+        self.x[1, 0] += dy
+        self.x[2, 0] += dtheta
+        self.x[2, 0] = self.normalize_angle(self.x[2, 0])
 
         ## Predict the Covariance Matrix
+        self.sigma = self.A @ self.sigma @ self.A.T + self.R
 
-        raise NotImplementedError("Prediction step not implemented yet.")
+        # raise NotImplementedError("Prediction step not implemented yet.")
 
     
     def update(self, z : np.ndarray):
@@ -54,14 +63,21 @@ class KalmanFilter:
         ## NOTE: Don't forget to normalize the angle after each modification to state.
 
         ## Compute the Kalman Gain.
+        S = self.C @ self.sigma @ self.C.T + self.Q
+        K = self.sigma @ self.C.T @ np.linalg.inv(S)
 
         ## Compute Innovation
+        self.y = z - (self.C @ self.x)
+        self.y[2, 0] = self.normalize_angle(self.y[2, 0])
 
         ## Update the state.
+        self.x = self.x + K @ y
+        self.x[2, 0] = self.normalize_angle(self.x[2, 0])
 
         ## Update the Covariance Matrix
+        self.sigma = (np.eye(3) - K @ self.C) @ self.sigma
 
-        raise NotImplementedError("Update step not implemented yet.")
+        #raise NotImplementedError("Update step not implemented yet.")
 
 if __name__ == '__main__':
     kf = KalmanFilter()

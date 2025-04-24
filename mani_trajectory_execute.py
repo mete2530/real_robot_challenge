@@ -206,7 +206,7 @@ class MoveGroupPythonInterfaceSimple(object):
         ## Look at the Angles below, this is where the robot arm will move to.
         ## These angles are in degrees.
         ## Move your robot to these arm angles using the rviz interface to see how will this look.
-        trajectory_list = [[0, 45, -20, 40]] 
+        trajectory_list = [[0, 45, -20, 40]] #TODO1 adjust these for the positions that the robot will traverse. Pre grasp position, grasp position, etc
 
         ## Convert angel to radian
         trajectory_list = [[x * pi / 180 for x in wp] for wp in trajectory_list]
@@ -219,7 +219,7 @@ class MoveGroupPythonInterfaceSimple(object):
  	    # Stay for a while
         time.sleep(0.5)
         # Close the gripper (don't use 0.0 for your case, since it may damage the motor)
-        self.set_gripper_width(-0.01)
+        self.set_gripper_width(-0.01)       # self.set_gripper_width(-0.01)
         
         # Optional move the gripper back to zero pose
         self.go_to_joint_state_arm([0, 0, 0, 0])

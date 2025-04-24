@@ -121,8 +121,8 @@ def main():
     #                       (0.5, 1.5, np.pi)]
     ## Below are example waypoints, change them as needed.
     waypoints = [
-        (1.5,1.5, np.pi),
-        (0.5, 0.5, np.pi),
+        (1.5,1.5, np.pi),       # First goal: x=1.5m, y=1.5m, orientation π radians
+        (0.5, 0.5, np.pi),      # Second goal: x=0.5m, y=1.5m, maintaining orientation
     ]
 
     controller.move_to_waypoints(waypoints)
