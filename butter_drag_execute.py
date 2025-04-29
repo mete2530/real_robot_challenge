@@ -23,7 +23,7 @@ import rospy
 import moveit_commander
 import moveit_msgs.msg
 import geometry_msgs.msg
-import time
+import time, random, math
 try:
     from math import pi, tau, dist, fabs, cos
 except:  # For Python 2 compatibility
@@ -41,6 +41,13 @@ from moveit_commander.conversions import pose_to_list
 ## END_SUB_TUTORIAL
 
 
+from collections import namedtuple
+import robot_controller  # Assumed base mobility controller
+
+Obstacle = namedtuple('Obstacle', ['x', 'y', 'radius'])
+MapData = namedtuple('MapData', ['obstacles', 'goal'])
+
+
 def all_close(goal, actual, tolerance):
     """
     Convenience method for testing if the values in two lists are within a tolerance of each other.
@@ -55,20 +62,67 @@ def all_close(goal, actual, tolerance):
         for index in range(len(goal)):
             if abs(actual[index] - goal[index]) > tolerance:
                 return False
-
-    elif type(goal) is geometry_msgs.msg.PoseStamped:
+    
+    elif isinstance(goal, geometry_msgs.msg.PoseStamped):
         return all_close(goal.pose, actual.pose, tolerance)
-
-    elif type(goal) is geometry_msgs.msg.Pose:
+    
+    elif isinstance(goal, geometry_msgs.msg.Pose):
         x0, y0, z0, qx0, qy0, qz0, qw0 = pose_to_list(actual)
         x1, y1, z1, qx1, qy1, qz1, qw1 = pose_to_list(goal)
         # Euclidean distance
-        d = dist((x1, y1, z1), (x0, y0, z0))
+        d = math.dist((x1, y1, z1), (x0, y0, z0))
         # phi = angle between orientations
-        cos_phi_half = fabs(qx0 * qx1 + qy0 * qy1 + qz0 * qz1 + qw0 * qw1)
-        return d <= tolerance and cos_phi_half >= cos(tolerance / 2.0)
-
+        cos_phi_half = abs(qx0*qx1 + qy0*qy1 + qz0*qz1 + qw0*qw1)
+        return d <= tolerance and cos_phi_half >= math.cos(tolerance/2.0)
+    
     return True
+
+
+def get_map_data(num_obs=5, field_size=5.0, berth=1.0):
+    # generates obstacles of random position and radius.
+    # includes the robot's radius in obstacle radius to simplify calculations
+    # TODO: tweak map data
+    obstacles = []
+    for _ in range(num_obs):
+        x = random.uniform(-field_size, field_size)
+        y = random.uniform(-field_size, field_size)
+        r = random.uniform(0.2, 0.5) + berth
+        obstacles.append(Obstacle(x, y, r))
+    goal = (random.uniform(-field_size, field_size), random.uniform(-field_size, field_size), 0.0)
+
+    return MapData(obstacles, goal)
+
+
+def line_circle_intersect(a, b, obs):
+    # distance from circle center to line segment ab
+    (x1, y1) = (a[0], a[1])
+    (x2, y2) = (b[0], b[1])
+    dx = x2-x1
+    dy = y2-y1
+    t = ((obs.x-x1)*dx + (obs.y-y1)*dy) / (dx*dx + dy*dy)
+    t = max(0, min(1, t))
+    px = x1 + t*dx
+    py = y1 + t*dy
+    return math.hypot(px-obs.x, py-obs.y) < obs.radius
+
+
+def compute_heading(from_pt, to_pt):
+    dx = to_pt[0] - from_pt[0]
+    dy = to_pt[1] - from_pt[1]
+    return math.atan2(dy, dx)
+
+
+def generate_bug_path(start, goal, obstacles):
+    path = [start]
+    for obs in obstacles:
+        if line_circle_intersect(start, goal, obs):
+            # simple detour: go to tangent point at obstacle boundary
+            theta = compute_heading((obs.x, obs.y), goal)
+            tx = obs.x + obs.radius * math.cos(theta)
+            ty = obs.y + obs.radius * math.sin(theta)
+            path.append((tx, ty, compute_heading((tx, ty), goal)))
+    path.append(goal)
+    return path
 
 
 class MoveGroupPythonInterfaceSimple(object):
@@ -192,156 +246,17 @@ class MoveGroupPythonInterfaceSimple(object):
         current_gripper_width = self.move_group_gripper.get_current_joint_values()
         return all_close([gripper_width, gripper_width], current_gripper_width, 0.05)
 
-    def execute_trajectory_joint(self):
-        # The function to move the manipulator along a pre-recorded trajectory
-        # The trajectory is defined by several joint states along the path
-
-        ## TODO: create your own trajectory, so that the robot can grasp
-        ## the target object along it
-        ## You can either continue using the provided baseline method and finetuning it
-        ## Or create more complicated trajectories by yourself
-
-        ## Baseline Method: move the gripper near the target, and close it
-        self.set_gripper_width(0.012)
+    def pick_butter(self):
+        # TODO: Open gripper, move down, close, and lift
+        # self.set_gripper_width(0.012)
+        # self.go_to_joint_state_arm([0, 0, 0, 0])
         time.sleep(1)
 
-        ## Look at the Angles below, this is where the robot arm will move to.
-        ## These angles are in degrees.
-        ## Move your robot to these arm angles using the rviz interface to see how will this look.
-        trajectory_list = [[0, 45, -20, 40]] #TODO1 adjust these for the positions that the robot will traverse. Pre grasp position, grasp position, etc
-
-        ## Convert angel to radian
-        trajectory_list = [[x * pi / 180 for x in wp] for wp in trajectory_list]
-        for wp in trajectory_list:
-            self.go_to_joint_state_arm(wp)
-            # Somehow "wait=True" doesn't prevent the system from pausing for a enough long time...
-            time.sleep(10)
-
-        ## TODO: set up the gripper width with your own recorded data
- 	    # Stay for a while
-        time.sleep(0.5)
-        # Close the gripper (don't use 0.0 for your case, since it may damage the motor)
-        self.set_gripper_width(-0.01)       # self.set_gripper_width(-0.01)
-        
-        # Optional move the gripper back to zero pose
-        self.go_to_joint_state_arm([0, 0, 0, 0])
-        ## Custom Method (Optional)
-
-    #####################################################
-    #### The following functions are OPTIONAL        #### 
-    ####                                             ####
-    #### You can read and use them for more powerful ####
-    #### functionalities, such as debugging or do the ###
-    #### the motion planning in a new way. But they   ###
-    #### are NOT required for the final challenge     ###
-    #####################################################
-
-    def go_to_pose_goal_arm(self, pose_goal): #Optional
-        # Move the robotic arm to the desired pose
-
-        # An Example of specifying the goal pose with quaternions
-        #
-        # pose_goal = geometry_msgs.msg.Pose()
-        # pose_goal.orientation.w = 1.0
-        # pose_goal.position.x = 0.4
-        # pose_goal.position.y = 0.1
-        # pose_goal.position.z = 0.4
-
-        self.move_group_arm.set_pose_target(pose_goal)
-
-        # Now, we call the planner to compute the plan and execute it.
-        # `go()` returns a boolean indicating whether the planning and execution was successful.
-        success = self.move_group_arm.go(wait=True)
-        # Calling `stop()` ensures that there is no residual movement
-        self.move_group_arm.stop()
-        # It is always good to clear your targets after planning with poses.
-        # Note: there is no equivalent function for clear_joint_value_targets().
-        self.move_group_arm.clear_pose_targets()
-
-
-        # For testing:
-        # Note that since this section of code will not be included in the tutorials
-        # we use the class variable rather than the copied state variable
-        current_pose = self.move_group_arm.get_current_pose().pose
-        return all_close(pose_goal, current_pose, 0.05)
-
-    def plan_cartesian_path_arm(self, scale=1): #Optional
-        ##
-        ## Cartesian Paths
-        ## ^^^^^^^^^^^^^^^
-        ## You can plan a Cartesian path directly by specifying a list of waypoints
-        ## for the end-effector to go through. If executing  interactively in a
-        ## Python shell, set scale = 1.0.
-        ##
-        waypoints = []
-
-        wpose = self.move_group_arm.get_current_pose().pose
-        wpose.position.z -= scale * 0.1  # First move up (z)
-        wpose.position.y += scale * 0.2  # and sideways (y)
-        waypoints.append(copy.deepcopy(wpose))
-
-        wpose.position.x += scale * 0.1  # Second move forward/backwards in (x)
-        waypoints.append(copy.deepcopy(wpose))
-
-        wpose.position.y -= scale * 0.1  # Third move sideways (y)
-        waypoints.append(copy.deepcopy(wpose))
-
-        # We want the Cartesian path to be interpolated at a resolution of 1 cm
-        # which is why we will specify 0.01 as the eef_step in Cartesian
-        # translation.  We will disable the jump threshold by setting it to 0.0,
-        # ignoring the check for infeasible jumps in joint space, which is sufficient
-        # for this tutorial.
-        (plan, fraction) = self.move_group_arm.compute_cartesian_path(
-            waypoints, 0.01, 0.0  # waypoints to follow  # eef_step
-        )  # jump_threshold
-
-        # Note: We are just planning, not asking move_group to actually move the robot yet:
-        return plan, fraction
-
-        ## END_SUB_TUTORIAL
-
-    def display_trajectory(self, plan): # Optional
-        # Copy class variables to local variables to make the web tutorials more clear.
-        # In practice, you should use the class variables directly unless you have a good
-        # reason not to.
-        robot = self.robot
-        display_trajectory_publisher = self.display_trajectory_publisher
-
-        ##
-        ## Displaying a Trajectory
-        ## ^^^^^^^^^^^^^^^^^^^^^^^
-        ## You can ask RViz to visualize a plan (aka trajectory) for you. But the
-        ## group.plan() method does this automatically so this is not that useful
-        ## here (it just displays the same trajectory again):
-        ##
-        ## A `DisplayTrajectory`_ msg has two primary fields, trajectory_start and trajectory.
-        ## We populate the trajectory_start with our current robot state to copy over
-        ## any AttachedCollisionObjects and add our plan to the trajectory.
-        display_trajectory = moveit_msgs.msg.DisplayTrajectory()
-        display_trajectory.trajectory_start = robot.get_current_state()
-        display_trajectory.trajectory.append(plan)
-        # Publish
-        display_trajectory_publisher.publish(display_trajectory)
-
-    def execute_plan_arm(self, plan): #Optional
-        # Copy class variables to local variables to make the web tutorials more clear.
-        # In practice, you should use the class variables directly unless you have a good
-        # reason not to.
-        move_group = self.move_group_arm
-
-        ## BEGIN_SUB_TUTORIAL execute_plan
-        ##
-        ## Executing a Plan
-        ## ^^^^^^^^^^^^^^^^
-        ## Use execute if you would like the robot to follow
-        ## the plan that has already been computed:
-        move_group.execute(plan, wait=True)
-
-        ## **Note:** The robot's current joint state must be within some tolerance of the
-        ## first waypoint in the `RobotTrajectory`_ or ``execute()`` will fail
-
-
-
+    def drop_butter(self):
+        # TODO: Lower, open, and retract
+        # self.set_gripper_width(0.012)
+        # self.go_to_joint_state_arm([0, 0, 0, 0])
+        time.sleep(1)
 
 
 def main():
@@ -357,25 +272,31 @@ def main():
             "============ Press `Enter` to start ===================="
         )
         tutlebot3 = MoveGroupPythonInterfaceSimple()
+        
+        input(
+            "============ Press `Enter` to execute pick up butter..."
+        )
+        tutlebot3.pick_butter()
+
+        # Navigate to goal using Bug algorithm
+        berth = 1 # TODO: find appropriate value for robot
+        map_data = get_map_data(berth)
+        start = (0.0, 0.0, 0.0)
+        path = generate_bug_path(start, map_data.goal, map_data.obstacles)
 
         input(
-            "============ Press `Enter` to execute a movement following a trajectory with joint states"
+            "============ Press `Enter` to execute bug algorithm to goal..."
         )
-        tutlebot3.execute_trajectory_joint()
 
-        # input("============ Press `Enter` to execute a movement using a pose goal ...")
-        # tutorial.go_to_pose_goal()
+        for waypoint in path:
+            x, y, theta = waypoint
+            robot_controller.move_to_pose(x, y, theta)
+            time.sleep(1)
 
-        # input("============ Press `Enter` to plan and display a Cartesian path ...")
-        # cartesian_plan, fraction = tutorial.plan_cartesian_path()
-
-        # input(
-        #     "============ Press `Enter` to display a saved trajectory (this will replay the Cartesian path)  ..."
-        # )
-        # tutorial.display_trajectory(cartesian_plan)
-
-        # input("============ Press `Enter` to execute a saved path ...")
-        # tutorial.execute_plan(cartesian_plan)
+        input(
+            "============ Press `Enter` to execute drop butter..."
+        )
+        tutlebot3.drop_butter()
 
 
 
