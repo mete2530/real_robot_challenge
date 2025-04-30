@@ -203,27 +203,164 @@ class MoveGroupPythonInterfaceSimple(object):
         self.set_gripper_width(0.012)
         time.sleep(1)
 
-        ## Look at the Angles below, this is where the robot arm will move to.
-        ## These angles are in degrees.
-        ## Move your robot to these arm angles using the rviz interface to see how will this look.
-        trajectory_list = [[0, 45, -20, 40]] #TODO1 adjust these for the positions that the robot will traverse. Pre grasp position, grasp position, etc
-
-        ## Convert angel to radian
+        ## START program 
+        print("1. Move down to the lid location")
+        trajectory_list = [[-2, 55, -1, -23]]
         trajectory_list = [[x * pi / 180 for x in wp] for wp in trajectory_list]
         for wp in trajectory_list:
             self.go_to_joint_state_arm(wp)
-            # Somehow "wait=True" doesn't prevent the system from pausing for a enough long time...
-            time.sleep(10)
-
-        ## TODO: set up the gripper width with your own recorded data
- 	    # Stay for a while
+            time.sleep(5)
         time.sleep(0.5)
-        # Close the gripper (don't use 0.0 for your case, since it may damage the motor)
-        self.set_gripper_width(-0.01)       # self.set_gripper_width(-0.01)
+
+        print("2. grab lid now")
+        self.set_gripper_width(0.00) 
         
-        # Optional move the gripper back to zero pose
-        self.go_to_joint_state_arm([0, 0, 0, 0])
-        ## Custom Method (Optional)
+        print("3. move up now")
+        trajectory_list = [[0, 0, 0, 0]] 
+        trajectory_list = [[x * pi / 180 for x in wp] for wp in trajectory_list]
+        for wp in trajectory_list:
+            self.go_to_joint_state_arm(wp)
+            time.sleep(2)
+        time.sleep(2)
+
+        print("4. turn left now")
+        trajectory_list = [[28, 18, -17, -7]] 
+        trajectory_list = [[x * pi / 180 for x in wp] for wp in trajectory_list]
+        for wp in trajectory_list:
+            self.go_to_joint_state_arm(wp)
+            time.sleep(5)
+        time.sleep(2)
+
+        print("5. move down now")
+        trajectory_list = [[28, 70, -32, -10]] 
+        trajectory_list = [[x * pi / 180 for x in wp] for wp in trajectory_list]
+        for wp in trajectory_list:
+            self.go_to_joint_state_arm(wp)
+            time.sleep(5) 
+        time.sleep(0.5)
+
+        print("6. release lid now")
+        self.set_gripper_width(0.012) 
+
+        print("7. move up")
+        trajectory_list = [[28, 18, -17, -7]] 
+        trajectory_list = [[x * pi / 180 for x in wp] for wp in trajectory_list]
+        for wp in trajectory_list:
+            self.go_to_joint_state_arm(wp)
+            time.sleep(5)
+        time.sleep(2)
+
+        print("8. oringinal position")
+        trajectory_list = [[0, 0, 0, 0]] 
+        trajectory_list = [[x * pi / 180 for x in wp] for wp in trajectory_list]
+        for wp in trajectory_list:
+            self.go_to_joint_state_arm(wp)
+            time.sleep(2)
+        time.sleep(2)
+
+        print("9. move down to butter")
+        trajectory_list = [[-2, 55, -1, -23]]
+        trajectory_list = [[x * pi / 180 for x in wp] for wp in trajectory_list]
+        for wp in trajectory_list:
+            self.go_to_joint_state_arm(wp)
+            time.sleep(5)
+        time.sleep(2)
+
+        print("10. grab the butter")
+        self.set_gripper_width(-0.006) 
+
+        print("11. move up")
+        trajectory_list = [[0, 0, 0, 0]] 
+        trajectory_list = [[x * pi / 180 for x in wp] for wp in trajectory_list]
+        for wp in trajectory_list:
+            self.go_to_joint_state_arm(wp)
+            time.sleep(2)
+        time.sleep(5)
+
+        print("11. move right")
+        trajectory_list = [[-28, 18, -17, -7]] 
+        trajectory_list = [[x * pi / 180 for x in wp] for wp in trajectory_list]
+        for wp in trajectory_list:
+            self.go_to_joint_state_arm(wp)
+            time.sleep(2)
+        time.sleep(5)
+
+        print("12. move down")
+        trajectory_list = [[-28, 70, -32, -10]] 
+        trajectory_list = [[x * pi / 180 for x in wp] for wp in trajectory_list]
+        for wp in trajectory_list:
+            self.go_to_joint_state_arm(wp)
+            time.sleep(2)
+        time.sleep(2)
+
+        print("13. release butter now")
+        self.set_gripper_width(0.012) 
+
+        print("14. move up")
+        trajectory_list = [[-28, 18, -17, -7]] 
+        trajectory_list = [[x * pi / 180 for x in wp] for wp in trajectory_list]
+        for wp in trajectory_list:
+            self.go_to_joint_state_arm(wp)
+            time.sleep(2)
+        time.sleep(2)
+
+        print("15. move over to the lid")
+        trajectory_list = [[28, 18, -17, -7]] 
+        trajectory_list = [[x * pi / 180 for x in wp] for wp in trajectory_list]
+        for wp in trajectory_list:
+            self.go_to_joint_state_arm(wp)
+            time.sleep(2)
+        time.sleep(2)
+
+        print("16. move down")
+        trajectory_list = [[28, 70, -32, -10]] 
+        trajectory_list = [[x * pi / 180 for x in wp] for wp in trajectory_list]
+        for wp in trajectory_list:
+            self.go_to_joint_state_arm(wp)
+            time.sleep(5) 
+        time.sleep(0.5)
+
+        print("17. grib lid now")
+        self.set_gripper_width(0.00) 
+        
+        print("18. move up")
+        trajectory_list = [[28, 18, -17, -7]] 
+        trajectory_list = [[x * pi / 180 for x in wp] for wp in trajectory_list]
+        for wp in trajectory_list:
+            self.go_to_joint_state_arm(wp)
+            time.sleep(2)
+        time.sleep(2)
+
+        print("19. move original")
+        trajectory_list = [[0, 0, 0, 0]] 
+        trajectory_list = [[x * pi / 180 for x in wp] for wp in trajectory_list]
+        for wp in trajectory_list:
+            self.go_to_joint_state_arm(wp)
+            time.sleep(2)
+        time.sleep(2)
+
+        print("20. move down to butter tray")
+        trajectory_list = [[-2, 55, -1, -23]]
+        trajectory_list = [[x * pi / 180 for x in wp] for wp in trajectory_list]
+        for wp in trajectory_list:
+            self.go_to_joint_state_arm(wp)
+            time.sleep(5)
+        time.sleep(2)
+
+        print("21. release lid now")
+        self.set_gripper_width(0.012) 
+
+
+        print("22. move original")
+        trajectory_list = [[0, 0, 0, 0]] 
+        trajectory_list = [[x * pi / 180 for x in wp] for wp in trajectory_list]
+        for wp in trajectory_list:
+            self.go_to_joint_state_arm(wp)
+            time.sleep(2)
+        time.sleep(2)
+
+
+
 
     #####################################################
     #### The following functions are OPTIONAL        #### 
