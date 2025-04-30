@@ -81,20 +81,20 @@ def all_close(goal, actual, tolerance):
 def get_random(range = 2.0, min = 0.0):
     return random.uniform(min, min+math.abs(range))
 
-def get_map_data(num_obs=3, field_size=2.0, berth=0.4):
+def get_obstacles(num_obs=3, x_range=3.0, y_range=1.5, berth=0.4):
     # generates obstacles of random position and radius.
     # includes the robot's radius in obstacle radius to simplify calculations
     # TODO: tweak map data
     obstacles = []
     for _ in range(num_obs):
-        x = get_random(range = field_size)
-        y = get_random(range = field_size)
+        x = get_random(range = x_range)
+        y = get_random(range = y_range)
         r = get_random(range = 0.2, min = berth)
         obstacles.append(Obstacle(x, y, r))
-    # goal = (get_random(range = field_size), get_random(range = field_size), 0.0)
-    goal = (1.8, 1.8, 0.0)
+    # goal = (get_random(range = x_range), get_random(range = y_range), 0.0)
+    # goal = (1.8, 1.8, 0.0)
 
-    return MapData(obstacles, goal)
+    return obstacles
 
 
 def line_circle_intersect(a, b, obs):
@@ -283,13 +283,16 @@ def main():
         tutlebot3.pick_butter()
 
         # Navigate to goal using Bug algorithm
-        berth = 0.2 # TODO: find appropriate value for robot
-        map_data = get_map_data(berth)
+        berth = 0.31 # TODO: find appropriate value for robot
+        obstacles = get_obstacles(num_obs=3, berth=berth)
         start = (0.1, 0.1, 0.0)
-        path = generate_bug_path(start, map_data.goal, map_data.obstacles)
+        goal = (1.5, 1.5, 0.0)
+        path = generate_bug_path(start, goal, obstacles)
 
-        print("Generated map data:")
-        for i, obstacle in enumerate(map_data):
+        print(f"Start: {start}")
+        print(f"Goal: {goal}")
+        print("Generated obstacles:")
+        for i, obstacle in enumerate(obstacles):
             x, y, r = obstacle
             print(f"  Obstacle {i}:  x={x:.3f}, y={y:.3f}, r={r:.3f}")
 
