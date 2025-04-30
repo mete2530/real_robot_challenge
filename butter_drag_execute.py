@@ -78,11 +78,11 @@ def all_close(goal, actual, tolerance):
     return True
 
 
-def get_random(range = 2.0, min = 0.0):
+def get_random(range = 1.8, min = 0.0):
     return random.uniform(min, min+math.abs(range))
 
 
-def get_obstacles(num_obs=3, x_range=3.0, y_range=1.5, berth=0.4):
+def get_obstacles(num_obs=3, x_range=1.8, y_range=1.8, berth=0.4):
     # generates obstacles of random position and radius.
     # includes the robot's radius in obstacle radius to simplify calculations
     # TODO: tweak map data
