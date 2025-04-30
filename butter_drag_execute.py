@@ -81,6 +81,7 @@ def all_close(goal, actual, tolerance):
 def get_random(range = 2.0, min = 0.0):
     return random.uniform(min, min+math.abs(range))
 
+
 def get_obstacles(num_obs=3, x_range=3.0, y_range=1.5, berth=0.4):
     # generates obstacles of random position and radius.
     # includes the robot's radius in obstacle radius to simplify calculations
@@ -116,17 +117,67 @@ def compute_heading(from_pt, to_pt):
     return math.atan2(dy, dx)
 
 
-def generate_bug_path(start, goal, obstacles):
-    path = [start]
+def generate_tangent_detour_path(start, goal, obstacles, depth=5):
+    """
+    Returns an ordered list of waypoints (x,y,theta) of a valid path (excluding start).
+    Returns None if no valid path was found (due to out of recursion budget or no path possible),
+    Recursively computes a collision‐free path from start to goal around circular obstacles
+    by adding an intermediary tangent point to avoid the first obstacle collision.
+    """
+
+    # Base case: Failure if we've recursed too deeply
+    if depth < 0:
+        return None
+
+    # Search through obstacles and check if they intersect
     for obs in obstacles:
-        if line_circle_intersect(start, goal, obs):
-            # simple detour: go to tangent point at obstacle boundary
-            theta = compute_heading((obs.x, obs.y), goal)
-            tx = obs.x + obs.radius * math.cos(theta)
-            ty = obs.y + obs.radius * math.sin(theta)
-            path.append((tx, ty, compute_heading((tx, ty), goal)))
-    path.append(goal)
-    return path
+        if not line_circle_intersect(start, goal, obs):
+            continue
+
+        # Compute unit perpendicular to the start to goal vector
+        dx, dy = goal[0] - start[0], goal[1] - start[1]
+        L = math.hypot(dx, dy)
+        ux, uy = -dy / L, dx / L  # perpendicular unit vector
+
+        # Tangent candidate for going around on left and right respectively
+        candidates = [
+            (obs.x + ux * obs.radius, obs.y + uy * obs.radius),
+            (obs.x - ux * obs.radius, obs.y - uy * obs.radius)
+        ]
+
+        # Try both candidates
+        for cx, cy in candidates:
+            theta = compute_heading((cx, cy), goal)
+            wp = (cx, cy, theta)
+            # Recursively find path for each leg
+            first_leg = generate_tangent_detour_path(start, wp, obstacles, depth-1)
+            if first_leg is None:
+                continue
+            second_leg = generate_tangent_detour_path(wp, goal, obstacles, depth-1)
+            if second_leg is None:
+                continue
+            # Both legs succeeded, return the found path
+            return first_leg + second_leg
+        
+        # Neither candidate worked, return failure
+        return None
+    
+    # No collisions detected, return base case path
+    return [goal]
+
+
+
+# def generate_bug_path(start, goal, obstacles):
+#     path = [start]
+#     for obs in obstacles:
+#         if line_circle_intersect(start, goal, obs):
+#             # simple detour: go to tangent point at obstacle boundary
+#             theta = compute_heading((obs.x, obs.y), goal)
+#             tx = obs.x + obs.radius * math.cos(theta)
+#             ty = obs.y + obs.radius * math.sin(theta)
+#             path.append((tx, ty, compute_heading((tx, ty), goal)))
+#     path.append(goal)
+#     return path
 
 
 class MoveGroupPythonInterfaceSimple(object):
@@ -282,13 +333,13 @@ def main():
         )
         tutlebot3.pick_butter()
 
-        # Navigate to goal using Bug algorithm
+        # Navigate to goal using tangent detour path algorithm
         berth = 0.31 # TODO: find appropriate value for robot
         # obstacles = get_obstacles(num_obs=3, berth=berth)
         obstacles = [1.0, 1.0, 0.4]
         start = (0.1, 0.1, 0.0)
         goal = (1.5, 1.5, 0.0)
-        path = generate_bug_path(start, goal, obstacles)
+        path = generate_tangent_detour_path(start, goal, obstacles)
 
         print(f"Start: {start}")
         print(f"Goal: {goal}")
@@ -298,13 +349,13 @@ def main():
             print(f"  Obstacle {i}:  x={x:.3f}, y={y:.3f}, r={r:.3f}")
 
 
-        print("Generated bug-algorithm path:")
+        print("Generated tangent detour path:")
         for i, waypoint in enumerate(path):
             x, y, theta = waypoint
             print(f"  Waypoint {i}:  x={x:.3f}, y={y:.3f}, θ={theta:.3f}")
 
         input(
-            "============ Press `Enter` to execute bug algorithm to goal..."
+            "============ Press `Enter` to execute tangent detour path to goal..."
         )
 
         for waypoint in path:
