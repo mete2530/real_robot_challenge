@@ -83,7 +83,7 @@ draw_line(arr, points, (0, arena_size), (arena_size, arena_size))
 # draw_line(arr, points, (0.48, 0.51), (1.37, 0.51))
 # draw_line(arr, points, (0.48, 0.51), (0.48, 1.42))
 # draw_line(arr, points, (0.48, 1.42), (1.37, 1.42))
-draw_line(arr, points, (0 , 0.92), (0.92, 0.92))
+# draw_line(arr, points, (0 , 0.92), (0.92, 0.92))
 
 ## Write the image to a file
 arr = arr.astype(np.uint8)
