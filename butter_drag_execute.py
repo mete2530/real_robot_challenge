@@ -288,8 +288,14 @@ def main():
         start = (0.1, 0.1, 0.0)
         path = generate_bug_path(start, map_data.goal, map_data.obstacles)
 
+        print("Generated map data:")
+        for i, obstacle in enumerate(map_data):
+            x, y, r = obstacle
+            print(f"  Obstacle {i}:  x={x:.3f}, y={y:.3f}, r={r:.3f}")
+
+
         print("Generated bug-algorithm path:")
-        for i, waypoint(x, y, theta) in enumerate(path):
+        for i, waypoint in enumerate(path):
             x, y, theta = waypoint
             print(f"  Waypoint {i}:  x={x:.3f}, y={y:.3f}, θ={theta:.3f}")
 
