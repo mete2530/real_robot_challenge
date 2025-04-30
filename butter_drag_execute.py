@@ -78,17 +78,21 @@ def all_close(goal, actual, tolerance):
     return True
 
 
-def get_map_data(num_obs=5, field_size=5.0, berth=1.0):
+def get_random(range = 2.0, min = 0.0):
+    return random.uniform(min, min+math.abs(range))
+
+def get_map_data(num_obs=3, field_size=2.0, berth=0.4):
     # generates obstacles of random position and radius.
     # includes the robot's radius in obstacle radius to simplify calculations
     # TODO: tweak map data
     obstacles = []
     for _ in range(num_obs):
-        x = random.uniform(-field_size, field_size)
-        y = random.uniform(-field_size, field_size)
-        r = random.uniform(0.2, 0.5) + berth
+        x = get_random(range = field_size)
+        y = get_random(range = field_size)
+        r = get_random(range = 0.2, min = berth)
         obstacles.append(Obstacle(x, y, r))
-    goal = (random.uniform(-field_size, field_size), random.uniform(-field_size, field_size), 0.0)
+    # goal = (get_random(range = field_size), get_random(range = field_size), 0.0)
+    goal = (1.8, 1.8, 0.0)
 
     return MapData(obstacles, goal)
 
@@ -274,15 +278,20 @@ def main():
         tutlebot3 = MoveGroupPythonInterfaceSimple()
         
         input(
-            "============ Press `Enter` to execute pick up butter..."
+            "============ Press `Enter` to execute pick up butter and generate path..."
         )
         tutlebot3.pick_butter()
 
         # Navigate to goal using Bug algorithm
-        berth = 1 # TODO: find appropriate value for robot
+        berth = 0.2 # TODO: find appropriate value for robot
         map_data = get_map_data(berth)
-        start = (0.0, 0.0, 0.0)
+        start = (0.1, 0.1, 0.0)
         path = generate_bug_path(start, map_data.goal, map_data.obstacles)
+
+        print("Generated bug-algorithm path:")
+        for i, waypoint(x, y, theta) in enumerate(path):
+            x, y, theta = waypoint
+            print(f"  Waypoint {i}:  x={x:.3f}, y={y:.3f}, θ={theta:.3f}")
 
         input(
             "============ Press `Enter` to execute bug algorithm to goal..."
