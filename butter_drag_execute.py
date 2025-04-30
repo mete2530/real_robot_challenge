@@ -284,7 +284,8 @@ def main():
 
         # Navigate to goal using Bug algorithm
         berth = 0.31 # TODO: find appropriate value for robot
-        obstacles = get_obstacles(num_obs=3, berth=berth)
+        # obstacles = get_obstacles(num_obs=3, berth=berth)
+        obstacles = [1.0, 1.0, 0.4]
         start = (0.1, 0.1, 0.0)
         goal = (1.5, 1.5, 0.0)
         path = generate_bug_path(start, goal, obstacles)
