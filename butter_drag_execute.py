@@ -140,9 +140,10 @@ def generate_tangent_detour_path(start, goal, obstacles, depth=5):
         ux, uy = -dy / L, dx / L  # perpendicular unit vector
 
         # Tangent candidate for going around on left and right respectively
+        clearance = obs.radius + 0.1
         candidates = [
-            (obs.x + ux * obs.radius, obs.y + uy * obs.radius),
-            (obs.x - ux * obs.radius, obs.y - uy * obs.radius)
+            (obs.x + ux * clearance, obs.y + uy * clearance),
+            (obs.x - ux * clearance, obs.y - uy * clearance)
         ]
 
         # Try both candidates
