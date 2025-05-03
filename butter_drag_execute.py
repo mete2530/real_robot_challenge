@@ -191,7 +191,7 @@ class MoveGroupPythonInterfaceSimple(object):
         #
         # First initialize `moveit_commander`_ and a `rospy`_ node:
         moveit_commander.roscpp_initialize(sys.argv)
-        rospy.init_node("mani_trajectory_exec", anonymous=True)
+        rospy.init_node("butter_drag", anonymous=True)
 
         # Instantiate a `RobotCommander`_ object. Provides information such as the robot's
         # kinematic model and the robot's current joint states
@@ -484,8 +484,6 @@ class MoveGroupPythonInterfaceSimple(object):
 
 
 def main():
-    rospy.init_node('butter_drag_execute')
-
     controller = RobotController()
     ## Ensure the robot stops if the node is killed.
     rospy.on_shutdown(controller.stop_robot)
