@@ -42,7 +42,7 @@ from moveit_commander.conversions import pose_to_list
 
 
 from collections import namedtuple
-import robot_controller  # Assumed base mobility controller
+from robot_controller import RobotController  # Assumed base mobility controller
 
 Obstacle = namedtuple('Obstacle', ['x', 'y', 'radius'])
 MapData = namedtuple('MapData', ['obstacles', 'goal'])
@@ -483,9 +483,9 @@ class MoveGroupPythonInterfaceSimple(object):
 
 
 def main():
-    rospy.init_node('robot_controller')
+    rospy.init_node('butter_drag_execute')
 
-    controller = robot_controller.RobotController()
+    controller = RobotController()
     ## Ensure the robot stops if the node is killed.
     rospy.on_shutdown(controller.stop_robot)
 
