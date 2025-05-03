@@ -483,6 +483,12 @@ class MoveGroupPythonInterfaceSimple(object):
 
 
 def main():
+    rospy.init_node('robot_controller')
+
+    controller = robot_controller.RobotController()
+    ## Ensure the robot stops if the node is killed.
+    rospy.on_shutdown(controller.stop_robot)
+
     try:
         print("")
         print("----------------------------------------------------------")
@@ -526,10 +532,11 @@ def main():
             "============ Press `Enter` to execute tangent detour path to goal..."
         )
 
-        for waypoint in path:
-            x, y, theta = waypoint
-            robot_controller.move_to_pose(x, y, theta)
-            time.sleep(1)
+        controller.move_to_waypoints(path)
+        # for waypoint in path:
+        #     x, y, theta = waypoint
+        #     robot_controller.move_to_pose(x, y, theta)
+        #     time.sleep(1)
 
         input(
             "============ Press `Enter` to execute open butter..."
@@ -543,6 +550,8 @@ def main():
         return
     except KeyboardInterrupt:
         return
+    
+    rospy.signal_shutdown("Task Completed. Shutting down the node.")
 
 
 if __name__ == "__main__":
