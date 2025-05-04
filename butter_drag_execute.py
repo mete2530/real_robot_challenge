@@ -381,10 +381,6 @@ class MoveGroupPythonInterfaceSimple(object):
 
 
 def main():
-    controller = RobotController()
-    ## Ensure the robot stops if the node is killed.
-    rospy.on_shutdown(controller.stop_robot)
-
     try:
         print("")
         print("----------------------------------------------------------")

@@ -226,8 +226,6 @@ def generate_tangent_detour_path(start, goal, obstacles, depth=5):
 
 
 def main():
-    rospy.init_node('robot_controller')
-
     controller = RobotController()
 
     ## Ensure the robot stops if the node is killed.
@@ -260,7 +258,7 @@ def main():
     controller.move_to_waypoints(path)
     # for waypoint in path:
     #     x, y, theta = waypoint
-    #     robot_controller.move_to_pose(x, y, theta)
+    #     controller.move_to_pose(x, y, theta)
     #     time.sleep(1)
 
     rospy.signal_shutdown("Task Completed. Shutting down the node.")
