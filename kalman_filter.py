@@ -71,7 +71,7 @@ class KalmanFilter:
         self.y[2, 0] = self.normalize_angle(self.y[2, 0])
 
         ## Update the state.
-        self.x = self.x + K @ y
+        self.x = self.x + K @ self.y
         self.x[2, 0] = self.normalize_angle(self.x[2, 0])
 
         ## Update the Covariance Matrix
